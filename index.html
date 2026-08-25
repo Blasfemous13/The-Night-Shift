@@ -33,11 +33,48 @@ h2{font-size:18px;margin:0 0 8px}h3{font-size:14px;margin:12px 0 6px}.small{font
 .toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%);background:#2b2033;border:1px solid #6b5079;padding:10px 14px;border-radius:11px;z-index:90;max-width:92%;box-shadow:0 10px 30px #0009}
 .bigResult{text-align:center;padding:12px}.bigResult .icon{font-size:54px}.score{font-size:30px;font-weight:900}.line{height:1px;background:var(--line);margin:10px 0}
 input{outline:none}
+
+
+.prepStation{background:linear-gradient(180deg,#1b1422,#100c15);border:1px solid #493650;border-radius:16px;padding:12px;text-align:center}
+.prepHeader{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.stationStage{height:245px;position:relative;margin:10px 0;border-radius:14px;overflow:hidden;background:
+radial-gradient(circle at 50% 65%,#3a253f 0,#17101d 42%,#0c0810 100%);border:1px solid #493650}
+.barCounter{position:absolute;left:0;right:0;bottom:0;height:65px;background:linear-gradient(#5b3b3e,#24171f);border-top:2px solid #765156}
+.tool{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);font-size:94px;filter:drop-shadow(0 12px 12px #0008)}
+.bottleAnim{position:absolute;font-size:44px;left:19%;top:43%;transform:rotate(-24deg);opacity:0;transition:.25s}
+.bottleAnim.pour{opacity:1;animation:pour .65s ease}
+.iceAnim{position:absolute;font-size:29px;left:47%;top:35%;opacity:0}
+.iceAnim.drop{opacity:1;animation:iceDrop .5s ease}
+.liquid{position:absolute;left:50%;transform:translateX(-50%);bottom:42px;width:68px;height:0;border-radius:8px 8px 18px 18px;background:linear-gradient(#d69a48,#63311f);opacity:.9;transition:height .35s}
+.bartenderAnim{position:absolute;bottom:30px;right:12%;font-size:58px;z-index:5}
+.shakeAnim{animation:shake .12s linear infinite}
+.stirAnim{animation:stir .7s linear infinite}
+.buildAnim{animation:build .45s ease}
+.muddleAnim{animation:muddle .18s linear infinite}
+.strainAnim{animation:strain .6s ease}
+@keyframes shake{0%,100%{transform:translateX(0) rotate(-6deg)}50%{transform:translateX(12px) rotate(8deg)}}
+@keyframes stir{0%{transform:translate(-50%,-50%) rotate(-5deg)}50%{transform:translate(-50%,-50%) rotate(5deg)}100%{transform:translate(-50%,-50%) rotate(-5deg)}}
+@keyframes build{0%{transform:translate(-50%,-50%) scale(.9)}50%{transform:translate(-50%,-50%) scale(1.08)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes muddle{0%,100%{transform:translate(-50%,-50%) rotate(-12deg)}50%{transform:translate(-50%,-50%) rotate(12deg)}}
+@keyframes strain{0%{transform:translate(-50%,-50%) translateY(-5px)}100%{transform:translate(-50%,-50%) translateY(5px)}}
+@keyframes pour{0%{transform:rotate(-24deg) translateY(5px)}50%{transform:rotate(-24deg) translateY(-3px)}100%{transform:rotate(-24deg) translateY(5px)}}
+@keyframes iceDrop{0%{transform:translateY(-30px)}100%{transform:translateY(35px)}}
+.prepTools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.prepTools button{border:1px solid #493650;background:#281d30;border-radius:10px;padding:8px 3px;font-size:9px;min-height:54px}
+.prepTools button.selected{outline:2px solid var(--a);background:#36233f}
+.prepIngredients{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+.prepIngredients button{border:1px solid #493650;background:#281d30;border-radius:10px;padding:8px 3px;font-size:9px;min-height:56px}
+.prepIngredients button:disabled{opacity:.35}
+.prepBuild{display:flex;gap:5px;overflow-x:auto;padding:7px 0;min-height:37px}
+.prepBuild .chip{white-space:nowrap}
+.techMeter{height:11px;background:#302532;border-radius:20px;overflow:hidden;margin:6px 0}
+.techMeter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#d66b6b,#e7c25f,#67d996);transition:width .12s}
+.prepHint{font-size:10px;color:var(--muted);min-height:28px}
 </style>
 </head>
 <body><div id="app"></div>
 <script>
-const GAME_VERSION="7.0.0-FINAL";
+const GAME_VERSION="8.0.0-COCKTAIL-PREP";
 const DRINKS=[
 {id:0,name:"Highball",cat:"Long",tech:"Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Whisky","Soda","Lemon"],icon:"🥃",pay:10,xp:8,notes:"Fast, clean and refreshing.",unlock:1},
 {id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Build over a large cube; balance spirit, sweetness and dilution, then garnish with orange.",unlock:1},
@@ -91,7 +128,7 @@ Shake:"Shake hard with ice to chill, dilute and aerate. Essential for citrus and
 function fresh(){return{
 tab:"home",guide:"recipes",guideSearch:"",version:GAME_VERSION,
 lvl:1,xp:0,money:35,rep:0,shift:0,served:0,perfect:0,
-points:0,active:0,orders:[],event:null,seen:[],claimedEvents:[],
+points:0,active:0,orders:[],event:null,seen:[],prep:null,claimedEvents:[],
 skills:{speed:1,mixology:1,knowledge:1,charm:1,perception:1,management:1},
 character:{name:"Alex",skin:"🧑🏽",outfit:"Classic"},
 people:{},
@@ -102,6 +139,16 @@ settings:{sound:true,fastMode:false}
 }}
 let S=(()=>{try{return JSON.parse(localStorage.getItem("tns_final_test"))||fresh()}catch(e){return fresh()}})();
 const save=()=>localStorage.setItem("tns_final_test",JSON.stringify(S));
+function fastModeSelfTest(){
+ const old=S.settings.fastMode;
+ S.settings.fastMode=true;
+ const fast=1;
+ S.settings.fastMode=false;
+ const normal=2+Math.min(2,Math.floor(S.lvl/8));
+ S.settings.fastMode=old;
+ return fast<normal;
+}
+
 function migrate(){let f=fresh();for(const k in f)if(S[k]===undefined)S[k]=f[k];if(!S.skills)S.skills=f.skills;if(!S.people)S.people={};if(!Array.isArray(S.claimedEvents))S.claimedEvents=[];if(!Array.isArray(S.recipes))S.recipes=[0,1];if(!S.settings)S.settings=f.settings;save()}
 migrate();
 const xpNeed=()=>80+S.lvl*35;
@@ -129,7 +176,7 @@ function home(){let regs=Object.values(S.people).filter(x=>x.regular).length;ret
 <div class="panel"><div class="row"><h2 style="margin:0">${S.character.name}</h2><span class="gold">${S.points} skill points</span></div><p class="small muted">Served ${S.served} • Perfect ${S.perfect} • Regulars ${regs}</p><div class="grid3"><div class="card"><b>Known recipes</b><div>${S.recipes.length}/${DRINKS.length}</div></div><div class="card"><b>Relationships</b><div>${Object.keys(S.people).length}/${PEOPLE.length}</div></div><div class="card"><b>Career</b><div>${rank()}</div></div></div></div>
 <div class="panel"><h2>Quick access</h2><div class="wrap"><button class="secondary" onclick="nav('guide')">📚 Recipes</button><button class="secondary" onclick="nav('people')">👥 Regulars</button><button class="secondary" onclick="nav('career')">📈 Skills</button><button class="secondary" onclick="settings()">⚙️ Settings</button></div></div>`}
 function startShift(){
- S.shift++;S.orders=[];let count=S.settings.fastMode?2:(2+Math.min(2,Math.floor(S.lvl/8)));
+ S.shift++;S.orders=[];let count=S.settings.fastMode?1:(2+Math.min(2,Math.floor(S.lvl/8)));
  for(let i=0;i<count;i++)S.orders.push(makeOrder(i));
  S.active=0;S.tab="shift";save();sound(520,.08);render()
 }
@@ -148,7 +195,7 @@ function shift(){
  if(!o)return`<div class="panel"><button class="primary" onclick="startShift()">Start shift</button></div>`;
  let rel=S.people[p.id]?.rel||0;
  return`<div class="panel"><div class="row"><b>Live ticket board</b><span class="gold">${S.orders.filter(x=>!x.done).length} active</span></div><div class="ticketGrid">${S.orders.map((x,i)=>{let pp=personById(x.person),dd=drinkById(x.drink);return`<button class="ticket ${i===S.active?"active ":""}${x.patience<25&&!x.done?"urgent":""}" onclick="S.active=${i};render()"><div class="row"><span>${pp.emoji} <b>${pp.name}</b>${S.people[pp.id]?.regular?" • ⭐":""}</span><span>${x.done?"✓":Math.max(0,Math.round(x.patience))+"%"}</span></div><div class="tiny muted">${dd.icon} ${dd.name}</div></button>`}).join("")}</div></div>
-<div class="panel"><div class="customer"><div class="avatar">${p.emoji}</div><div><b>${p.name}</b>${S.people[p.id]?.regular?` <span class="tag">REGULAR</span>`:""}<div class="small muted">${p.bio}</div></div></div><div class="row" style="margin-top:8px"><span class="small">Patience</span><span class="${o.patience<25?"bad":"gold"}">${Math.max(0,Math.round(o.patience))}%</span></div><div class="meter"><i style="width:${Math.max(0,o.patience)}%"></i></div><p style="font-size:16px">“${S.people[p.id]?.regular&&rel>50?"Good to see you again. ":""}I'll have a <b>${d.name}</b>.”</p><div class="wrap"><button class="secondary" onclick="dialogue('${p.id}')">💬 Talk</button><button class="secondary" onclick="nav('guide')">📚 Guide</button><button class="secondary" onclick="askClue('${p.id}')">👀 Read guest</button></div><h3>Make the ${d.name}</h3><div class="actions">${ING.map(x=>`<button class="${o.build.includes(x)?"selected":""}" onclick="pick('${x.replace(/'/g,"\\\\'")}')"><span>${I[x]||"•"}</span>${x}</button>`).join("")}</div><h3>Build</h3><div class="chips">${o.build.map((x,i)=>`<span class="chip">${i+1}. ${x}</span>`).join("")||"<span class='muted tiny'>Nothing yet</span>"}</div><div class="wrap" style="margin-top:10px"><button class="primary" onclick="serveOrder()">Serve</button><button class="secondary" onclick="o.build=[];render()">Clear</button></div></div>`
+<div class="panel"><div class="customer"><div class="avatar">${p.emoji}</div><div><b>${p.name}</b>${S.people[p.id]?.regular?` <span class="tag">REGULAR</span>`:""}<div class="small muted">${p.bio}</div></div></div><div class="row" style="margin-top:8px"><span class="small">Patience</span><span class="${o.patience<25?"bad":"gold"}">${Math.max(0,Math.round(o.patience))}%</span></div><div class="meter"><i style="width:${Math.max(0,o.patience)}%"></i></div><p style="font-size:16px">“${S.people[p.id]?.regular&&rel>50?"Good to see you again. ":""}I'll have a <b>${d.name}</b>.”</p><div class="wrap"><button class="secondary" onclick="dialogue('${p.id}')">💬 Talk</button><button class="secondary" onclick="nav('guide')">📚 Guide</button><button class="secondary" onclick="askClue('${p.id}')">👀 Read guest</button></div><h3>Make the ${d.name}</h3><div class="actions">${ING.map(x=>`<button class="${o.build.includes(x)?"selected":""}" onclick="pick('${x.replace(/'/g,"\\\\'")}')"><span>${I[x]||"•"}</span>${x}</button>`).join("")}</div><h3>Build</h3><div class="chips">${o.build.map((x,i)=>`<span class="chip">${i+1}. ${x}</span>`).join("")||"<span class='muted tiny'>Nothing yet</span>"}</div><div class="wrap" style="margin-top:10px"><button class="primary" onclick="openPreparation()">Make Cocktail</button><button class="secondary" onclick="o.build=[];render()">Clear</button></div></div>`
 }
 function pick(x){let o=S.orders[S.active];if(!o||o.done)return;o.build.push(x);o.patience=Math.max(0,o.patience-(S.up.ice?2:3)-(S.skills.speed-1));sound(330,.025);render()}
 function askClue(id){let p=personById(id),d=S.people[id]||{rel:0};let clue=p.prefs[Math.floor(Math.random()*p.prefs.length)];if(S.skills.perception>=2){toast(p.name+" seems to prefer "+clue+" drinks.");d.rel=Math.min(100,(d.rel||0)+1);S.people[id]=d;save()}else toast("You notice very little. Invest in Perception to read guests better.")}
@@ -158,12 +205,104 @@ function dialogue(id){
 function talk(id,type){
  let p=personById(id),d=S.people[id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};let amount=type==="taste"?5:3;d.rel=Math.min(100,(d.rel||0)+amount);if(!d.known)d.known=[];if(type==="taste"&&!d.known.includes(p.prefs[0]))d.known.push(p.prefs[0]);S.people[id]=d;save();document.querySelector(".modal")?.remove();toast(type==="taste"?p.name+" shared a preference. +5 relationship":"Good conversation • relationship +"+amount);render()
 }
+
+function prepSpec(d){
+ const map={
+  "Build":{tool:"Serving Glass",icon:"🥃",action:"BUILD",duration:900},
+  "Stir":{tool:"Mixing Glass",icon:"🥃",action:"STIR",duration:2400},
+  "Shake":{tool:"Shaker",icon:"🥤",action:"SHAKE",duration:2100},
+  "Muddle":{tool:"Muddler",icon:"🪵",action:"MUDDLE",duration:2200},
+  "Shake + Build":{tool:"Shaker + Glass",icon:"🥤",action:"SHAKE",duration:1800},
+  "Muddle + Build":{tool:"Muddler + Glass",icon:"🪵",action:"MUDDLE",duration:1900}
+ };
+ return map[d.tech]||map.Build;
+}
+function openPreparation(){
+ let o=S.orders[S.active],d=o&&drinkById(o.drink);
+ if(!o||o.done||S.prep)return;
+ S.prep={orderId:o.id,drink:d.id,tool:null,added:[],stage:"ingredients",started:Date.now(),techStart:0,techProgress:0,techGood:0,complete:false};
+ renderPreparation();
+}
+function prepAddIngredient(name){
+ let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
+ if(!p||!o||o.id!==p.orderId||p.stage!=="ingredients")return;
+ if(p.added.includes(name)){toast("Already added.");return}
+ let expected=d.need;
+ if(!expected.includes(name)){toast("That isn't part of this recipe.");return}
+ p.added.push(name);
+ const idx=expected.indexOf(name);
+ const correctSoFar=p.added.every((v,i)=>v===expected[i]);
+ o.patience=Math.max(0,o.patience-(S.up.ice?1:2));
+ sound(360+idx*35,.04);
+ renderPreparation();
+}
+function prepChooseTool(){
+ let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
+ if(!p||!o)return;
+ const spec=prepSpec(d);
+ if(p.tool!==spec.tool){p.tool=spec.tool;sound(470,.05);renderPreparation()}
+}
+function prepStartTechnique(){
+ let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
+ if(!p||!o||p.stage!=="technique")return;
+ if(!p.tool){toast("Choose the "+prepSpec(d).tool+" first.");return}
+ p.stage="perform";p.techStart=Date.now();p.techProgress=0;p.techGood=0;
+ renderPreparation();runTechniqueLoop();
+}
+function runTechniqueLoop(){
+ let p=S.prep;if(!p||p.stage!=="perform")return;
+ let d=drinkById(p.drink),spec=prepSpec(d),elapsed=Date.now()-p.techStart;
+ p.techProgress=Math.min(100,elapsed/spec.duration*100);
+ // Perfect zone is 70-100%, with a small tolerance after the target.
+ p.techGood=p.techProgress>=70?Math.min(100,(p.techProgress-70)/30*100):0;
+ const meter=document.getElementById("techFill"),num=document.getElementById("techNum"),tool=document.getElementById("prepTool");
+ if(meter)meter.style.width=p.techProgress+"%";
+ if(num)num.textContent=Math.round(p.techProgress)+"%";
+ if(tool)tool.className="tool "+(spec.action==="SHAKE"?"shakeAnim":spec.action==="STIR"?"stirAnim":spec.action==="MUDDLE"?"muddleAnim":"buildAnim");
+ if(p.techProgress>=100){
+   p.stage="finish";p.techGood=100;renderPreparation();return;
+ }
+ requestAnimationFrame(runTechniqueLoop);
+}
+function prepFinish(){
+ let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
+ if(!p||!o)return;
+ if(p.stage!=="finish"){toast("Finish the technique first.");return}
+ const exactIngredients=p.added.length===d.need.length&&p.added.every((v,i)=>v===d.need[i]);
+ const techniqueScore=p.techGood||0;
+ const score=Math.round((exactIngredients?70:Math.round(p.added.filter((x,i)=>x===d.need[i]).length/d.need.length*70)) + techniqueScore*.3);
+ o.build=[...p.added];
+ o.prepScore=Math.max(0,Math.min(100,score));
+ S.prep=null;save();render();
+ toast("Preparation complete • "+o.prepScore+"/100");
+}
+function cancelPreparation(){
+ S.prep=null;save();render()
+}
+function renderPreparation(){
+ let o=S.orders[S.active],d=o&&drinkById(o.drink),p=S.prep;
+ if(!o||!d||!p)return render();
+ const spec=prepSpec(d);
+ let stage=p.stage;
+ let stageText=stage==="ingredients"?"Add the ingredients in the recipe order.":stage==="technique"?"Choose your equipment, then start the technique.":stage==="perform"?"Keep going until the meter reaches 100%.":"Technique complete. Plate and serve.";
+ let toolIcon=p.tool==="Shaker"||p.tool==="Shaker + Glass"?"🥤":p.tool==="Mixing Glass"?"🥃":p.tool==="Muddler + Glass"||p.tool==="Muddler"?"🪵":"🍸";
+ let html=`<div class="panel prepStation"><div class="prepHeader"><div><h2 style="margin:0">${d.icon} ${d.name}</h2><div class="tiny muted">${d.tech} • ${d.glass} • ${d.garnish}</div></div><span class="tag">${stage.toUpperCase()}</span></div>
+ <div class="stationStage"><div class="barCounter"></div><div id="prepTool" class="tool">${stage==="ingredients"?toolIcon:spec.icon}</div><div class="liquid" style="height:${Math.min(82,p.added.length*11)}px"></div><div class="bottleAnim">🍾</div><div class="iceAnim">🧊</div><div class="bartenderAnim">${S.character.skin}</div></div>
+ <div class="prepHint">${stageText}</div>
+ ${stage==="ingredients"?`<h3>Add ingredients</h3><div class="prepIngredients">${d.need.map((x,i)=>`<button ${p.added.includes(x)?"disabled":""} onclick="prepAddIngredient('${x.replace(/'/g,"\\\\'")}')"><span style="font-size:20px">${I[x]||"•"}</span><br>${x}</button>`).join("")}</div><div class="prepBuild">${p.added.map((x,i)=>`<span class="chip">${i+1}. ${I[x]||"•"} ${x}</span>`).join("")||"<span class='tiny muted'>Nothing added yet</span>"}</div>${p.added.length===d.need.length?`<button class="primary" onclick="S.prep.stage='tool';renderPreparation()">Choose equipment</button>`:""}`:
+ stage==="tool"?`<h3>Select equipment</h3><div class="prepTools"><button class="${p.tool===spec.tool?"selected":""}" onclick="prepChooseTool()">${spec.icon}<br>${spec.tool}</button></div><button class="primary" ${p.tool?"":"disabled"} onclick="S.prep.stage='technique';renderPreparation()">Continue</button>`:
+ stage==="technique"?`<h3>Technique: ${d.tech}</h3><div class="card">Use the ${spec.tool}. When you're ready, begin the ${spec.action.toLowerCase()}.</div><button class="primary" onclick="prepStartTechnique()">▶ Start ${spec.action}</button>`:
+ stage==="perform"?`<h3>${spec.action}</h3><div class="techMeter"><i id="techFill"></i></div><div class="tiny"><span id="techNum">0</span>%</div>`:
+ `<h3>Finished</h3><div class="card"><b>Technique complete!</b><div class="tiny muted">Your preparation score will affect the final drink quality.</div></div><button class="primary" onclick="prepFinish()">Finish cocktail</button>`}
+ <div class="wrap" style="margin-top:10px"><button class="secondary" onclick="cancelPreparation()">Cancel</button></div></div>`;
+ document.getElementById("app").innerHTML=`<header><div class="title">🍸 The Night Shift</div><div class="sub">${rank()} • ${S.own?S.ownName:currentBar().name}</div></header><main>${html}</main>`;
+}
 function serveOrder(){
  let o=S.orders[S.active],d=drinkById(o.drink),p=personById(o.person);if(!o||o.done)return;
  let old=S.people[p.id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};
  let exact=o.build.length===d.need.length&&o.build.every((x,i)=>x===d.need[i]);
  let correct=o.build.filter((x,i)=>x===d.need[i]).length;
- let score=Math.round(correct/d.need.length*100);
+ let score=o.prepScore!==undefined?Math.round((o.prepScore+Math.round(correct/d.need.length*100))/2):Math.round(correct/d.need.length*100);
  let liked=p.likes.includes(d.name),known=old.known?.includes(p.prefs[0]);
  let bonus=exact?1.5:score>=70?1:.55;
  if(liked)bonus+=.28;if(known&&liked)bonus+=.12;if(S.skills.mixology>1)bonus+=.035*(S.skills.mixology-1);
@@ -255,7 +394,7 @@ function closeSettingsModal(){
   }
 }
 function settings(){
- let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button id="soundToggle" class="secondary" onclick="toggleSound(this)">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button id="fastToggle" class="secondary" onclick="toggleFastMode(this)">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">Two tickets per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div><div class="tiny good">Final QA build • diagnostics expanded</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="closeSettingsModal()">Close</button></div>`;document.body.appendChild(x)
+ let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button id="soundToggle" class="secondary" onclick="toggleSound(this)">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button id="fastToggle" class="secondary" onclick="toggleFastMode(this)">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">One ticket per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div><div class="tiny good">Final QA build • diagnostics expanded</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="closeSettingsModal()">Close</button></div>`;document.body.appendChild(x)
 }
 function runDiagnostics(){
  const required=["render","nav","startShift","makeOrder","pick","serveOrder","shiftSummary","finishShift","customize","saveCustomization","settings","toggleSound","toggleFastMode","closeSettingsModal","closeTopModal","claimEvent","gain","spend","travel","buy","buyOwn","ownUpgrade","hire","renameBar","guide","filterRecipes","dialogue","talk","askClue","resetSave"];
@@ -266,6 +405,7 @@ function runDiagnostics(){
  const peopleOK=PEOPLE.length>=7&&PEOPLE.every(p=>p.id&&p.name&&Array.isArray(p.likes));
  const guideOK=Object.keys(TECHS).length>=6;
  const settingsOK=typeof S.settings.sound==="boolean"&&typeof S.settings.fastMode==="boolean";
+ const fastModeOK=typeof fastModeSelfTest==="function"&&fastModeSelfTest();
  const saveOK=!!window.localStorage;
  const eventOK=typeof claimEvent==="function"&&srcHas("claimedEvents")&&srcHas("gain(e[3],e[4],e[5])");
  const checks=[
@@ -276,6 +416,7 @@ function runDiagnostics(){
   ["Customer data",peopleOK],
   ["Guide techniques",guideOK],
   ["Settings state",settingsOK],
+  ["Fast Mode logic",fastModeOK],
   ["Local save",saveOK],
   ["Event reward protection",eventOK]
  ];
