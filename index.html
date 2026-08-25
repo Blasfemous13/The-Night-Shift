@@ -61,7 +61,7 @@ radial-gradient(circle at 50% 65%,#3a253f 0,#17101d 42%,#0c0810 100%);border:1px
 @keyframes iceDrop{0%{transform:translateY(-30px)}100%{transform:translateY(35px)}}
 .prepTools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .prepTools button{border:1px solid #493650;background:#281d30;border-radius:10px;padding:8px 3px;font-size:9px;min-height:54px}
-.prepTools button.selected{outline:2px solid var(--a);background:#36233f}
+.prepTools button.selected{outline:2px solid var(--a);background:#36233f;transform:translateY(-1px)} .prepTools button b{font-size:8px;color:#e7c25f}
 .prepIngredients{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
 .prepIngredients button{border:1px solid #493650;background:#281d30;border-radius:10px;padding:8px 3px;font-size:9px;min-height:56px}
 .prepIngredients button:disabled{opacity:.35}
@@ -74,7 +74,7 @@ radial-gradient(circle at 50% 65%,#3a253f 0,#17101d 42%,#0c0810 100%);border:1px
 </head>
 <body><div id="app"></div>
 <script>
-const GAME_VERSION="8.1.0-COCKTAIL-PREP";
+const GAME_VERSION="8.2.0-CHOICE-PREP";
 const DRINKS=[
 {id:0,name:"Highball",cat:"Long",tech:"Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Whisky","Soda","Lemon"],icon:"🥃",pay:10,xp:8,notes:"Fast, clean and refreshing.",unlock:1},
 {id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Build over a large cube; balance spirit, sweetness and dilution, then garnish with orange.",unlock:1},
@@ -88,7 +88,7 @@ const DRINKS=[
 {id:9,name:"Mojito",cat:"Long",tech:"Muddle + Build",glass:"Highball",ice:"Crushed",garnish:"Mint + lime",need:["Glass","Lime","Sugar","Mint","Rum","Ice","Soda"],icon:"🌿",pay:25,xp:19,notes:"Gently muddle mint, lime and sugar; add rum and ice, then top with soda and garnish with mint.",unlock:14}
 ];
 const ING=["Glass","Rocks Glass","Coupe","Martini Glass","Ice","Whisky","Bourbon","Soda","Lemon","Bitters","Sugar","Orange","Tequila","Triple Sec","Lime","Salt","Gin","Campari","Sweet Vermouth","Rum","Vodka","Coffee Liqueur","Espresso","Egg White","Dry Vermouth","Olive","Mint"];
-const I={Ice:"🧊",Lemon:"🍋",Lime:"🍋",Orange:"🍊",Olive:"🫒",Sugar:"🧂",Salt:"🧂",Espresso:"☕","Egg White":"🥚",Whisky:"🥃",Bourbon:"🥃",Rum:"🥃",Vodka:"🍶",Gin:"🍸",Tequila:"🥃",Campari:"🧴","Sweet Vermouth":"🍷","Dry Vermouth":"🍷","Coffee Liqueur":"🧴","Triple Sec":"🧴",Soda:"🫧",Bitters:"🧴",Glass:"🥛","Rocks Glass":"🥃",Coupe:"🍸","Martini Glass":"🍸",Mint:"🌿"};
+const I={Ice:"🧊",Lemon:"🍋",Lime:"🍈",Orange:"🍊",Olive:"🫒",Sugar:"◈",Salt:"✦",Espresso:"☕","Egg White":"🥚",Whisky:"🥃",Bourbon:"🥃",Rum:"🍹",Vodka:"▥",Gin:"◉",Tequila:"🌵",Campari:"🔴","Sweet Vermouth":"🍷","Dry Vermouth":"🍷","Coffee Liqueur":"☕","Triple Sec":"🟠",Soda:"◌",Bitters:"💧",Glass:"▱","Rocks Glass":"▰",Coupe:"◯","Martini Glass":"△",Mint:"🌿"};
 const BARS=[
 {id:0,name:"The Copper Kettle",type:"Neighborhood Pub",desc:"Your first home. Warm, busy and forgiving.",lvl:1,mult:1},
 {id:1,name:"Velvet Room",type:"Cocktail Lounge",desc:"Precision and presentation matter.",lvl:5,mult:1.25},
@@ -206,21 +206,31 @@ function talk(id,type){
  let p=personById(id),d=S.people[id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};let amount=type==="taste"?5:3;d.rel=Math.min(100,(d.rel||0)+amount);if(!d.known)d.known=[];if(type==="taste"&&!d.known.includes(p.prefs[0]))d.known.push(p.prefs[0]);S.people[id]=d;save();document.querySelector(".modal")?.remove();toast(type==="taste"?p.name+" shared a preference. +5 relationship":"Good conversation • relationship +"+amount);render()
 }
 
+const PREP_TOOLS=[
+ {id:"shaker",name:"Cocktail Shaker",icon:"🥤",techs:["Shake"]},
+ {id:"mixing",name:"Mixing Glass",icon:"🥃",techs:["Stir"]},
+ {id:"barspoon",name:"Bar Spoon",icon:"🥄",techs:["Stir","Build"]},
+ {id:"muddler",name:"Muddler",icon:"🪵",techs:["Muddle"]},
+ {id:"glass",name:"Serving Glass",icon:"🍸",techs:["Build"]},
+ {id:"jigger",name:"Jigger",icon:"⚖️",techs:["Build","Shake","Stir","Muddle"]}
+];
+const PREP_TECHS=[
+ {id:"Build",name:"Build",icon:"🧱",desc:"Assemble directly in the serving glass."},
+ {id:"Stir",name:"Stir",icon:"🥄",desc:"Slow, controlled stirring for chilling and dilution."},
+ {id:"Shake",name:"Shake",icon:"↔️",desc:"Hard shaking for rapid chilling, dilution and texture."},
+ {id:"Muddle",name:"Muddle",icon:"🪵",desc:"Press and gently work fresh ingredients."},
+ {id:"Strain",name:"Strain",icon:"▿",desc:"Strain the prepared drink into the serving glass."}
+];
 function prepSpec(d){
- const map={
-  "Build":{tool:"Serving Glass",icon:"🥃",action:"BUILD",duration:900},
-  "Stir":{tool:"Mixing Glass",icon:"🥃",action:"STIR",duration:2400},
-  "Shake":{tool:"Shaker",icon:"🥤",action:"SHAKE",duration:2100},
-  "Muddle":{tool:"Muddler",icon:"🪵",action:"MUDDLE",duration:2200},
-  "Shake + Build":{tool:"Shaker + Glass",icon:"🥤",action:"SHAKE",duration:1800},
-  "Muddle + Build":{tool:"Muddler + Glass",icon:"🪵",action:"MUDDLE",duration:1900}
- };
- return map[d.tech]||map.Build;
+ const correct=d.tech;
+ const tool=(correct.includes("Shake")?"shaker":correct.includes("Stir")?"mixing":correct.includes("Muddle")?"muddler":"glass");
+ const action=correct.includes("Shake")?"SHAKE":correct.includes("Stir")?"STIR":correct.includes("Muddle")?"MUDDLE":"BUILD";
+ return {tool,name:PREP_TOOLS.find(x=>x.id===tool)?.name||"Serving Glass",icon:PREP_TOOLS.find(x=>x.id===tool)?.icon||"🍸",action,duration:correct.includes("Shake")?2100:correct.includes("Stir")?2400:correct.includes("Muddle")?2200:900};
 }
 function openPreparation(){
  let o=S.orders[S.active],d=o&&drinkById(o.drink);
  if(!o||o.done||o.prepared||S.prep)return;
- S.prep={orderId:o.id,drink:d.id,tool:null,added:[],stage:"ingredients",started:Date.now(),techStart:0,techProgress:0,techGood:0,complete:false};
+ S.prep={orderId:o.id,drink:d.id,tool:null,technique:null,added:[],stage:"ingredients",started:Date.now(),techStart:0,techProgress:0,techGood:0,complete:false};
  renderPreparation();
 }
 function prepAddIngredient(name){
@@ -236,29 +246,40 @@ function prepAddIngredient(name){
  sound(360+idx*35,.04);
  renderPreparation();
 }
-function prepChooseTool(){
- let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
+function prepChooseTool(id){
+ let p=S.prep,o=S.orders[S.active];
  if(!p||!o)return;
- const spec=prepSpec(d);
- if(p.tool!==spec.tool){p.tool=spec.tool;sound(470,.05);renderPreparation()}
+ const tool=PREP_TOOLS.find(x=>x.id===id);
+ if(!tool)return;
+ p.tool=id;sound(470,.05);renderPreparation();
+}
+function prepChooseTechnique(id){
+ let p=S.prep,o=S.orders[S.active];
+ if(!p||!o)return;
+ const tech=PREP_TECHS.find(x=>x.id===id);
+ if(!tech)return;
+ p.technique=id;sound(520,.05);renderPreparation();
 }
 function prepStartTechnique(){
  let p=S.prep,o=S.orders[S.active],d=drinkById(p.drink);
  if(!p||!o||p.stage!=="technique")return;
- if(!p.tool){toast("Choose the "+prepSpec(d).tool+" first.");return}
+ if(!p.tool||!p.technique){toast("Choose your equipment and technique first.");return}
  p.stage="perform";p.techStart=Date.now();p.techProgress=0;p.techGood=0;
+ const chosen=p.technique;
+ p.techDuration=chosen==="Shake"?2100:chosen==="Stir"?2400:chosen==="Muddle"?2200:chosen==="Build"?900:1600;
  renderPreparation();runTechniqueLoop();
 }
 function runTechniqueLoop(){
  let p=S.prep;if(!p||p.stage!=="perform")return;
  let d=drinkById(p.drink),spec=prepSpec(d),elapsed=Date.now()-p.techStart;
- p.techProgress=Math.min(100,elapsed/spec.duration*100);
+ const duration=p.techDuration||spec.duration;
+ p.techProgress=Math.min(100,elapsed/duration*100);
  // Perfect zone is 70-100%, with a small tolerance after the target.
  p.techGood=p.techProgress>=70?Math.min(100,(p.techProgress-70)/30*100):0;
  const meter=document.getElementById("techFill"),num=document.getElementById("techNum"),tool=document.getElementById("prepTool");
  if(meter)meter.style.width=p.techProgress+"%";
  if(num)num.textContent=Math.round(p.techProgress)+"%";
- if(tool)tool.className="tool "+(spec.action==="SHAKE"?"shakeAnim":spec.action==="STIR"?"stirAnim":spec.action==="MUDDLE"?"muddleAnim":"buildAnim");
+ if(tool){const a=p.technique;tool.className="tool "+(a==="Shake"?"shakeAnim":a==="Stir"?"stirAnim":a==="Muddle"?"muddleAnim":a==="Build"?"buildAnim":"strainAnim");}
  if(p.techProgress>=100){
    p.stage="finish";p.techGood=100;renderPreparation();return;
  }
@@ -269,8 +290,12 @@ function prepFinish(){
  if(!p||!o)return;
  if(p.stage!=="finish"){toast("Finish the technique first.");return}
  const exactIngredients=p.added.length===d.need.length&&p.added.every((v,i)=>v===d.need[i]);
+ const ingredientScore=exactIngredients?70:Math.round(p.added.filter((x,i)=>x===d.need[i]).length/d.need.length*70);
+ const correctTechnique=p.technique===d.tech || (d.tech.includes("Shake")&&p.technique==="Shake") || (d.tech.includes("Stir")&&p.technique==="Stir") || (d.tech.includes("Muddle")&&p.technique==="Muddle");
+ const correctTool=(d.tech.includes("Shake")&&p.tool==="shaker")||(d.tech.includes("Stir")&&p.tool==="mixing")||(d.tech.includes("Muddle")&&p.tool==="muddler")||((d.tech==="Build"||d.tech.includes("Build"))&&p.tool==="glass");
  const techniqueScore=p.techGood||0;
- const score=Math.round((exactIngredients?70:Math.round(p.added.filter((x,i)=>x===d.need[i]).length/d.need.length*70)) + techniqueScore*.3);
+ const choiceScore=(correctTechnique?15:4)+(correctTool?15:4);
+ const score=Math.round(ingredientScore+choiceScore+techniqueScore*.3);
  o.build=[...p.added];
  o.prepScore=Math.max(0,Math.min(100,score));
  o.prepared=true;
@@ -285,18 +310,20 @@ function cancelPreparation(){
 function renderPreparation(){
  let o=S.orders[S.active],d=o&&drinkById(o.drink),p=S.prep;
  if(!o||!d||!p)return render();
- const spec=prepSpec(d);
+ const correct=prepSpec(d);
  let stage=p.stage;
- let stageText=stage==="ingredients"?"Add the ingredients in the recipe order.":stage==="technique"?"Choose your equipment, then start the technique.":stage==="perform"?"Keep going until the meter reaches 100%.":"Technique complete. Plate and serve.";
- let toolIcon=p.tool==="Shaker"||p.tool==="Shaker + Glass"?"🥤":p.tool==="Mixing Glass"?"🥃":p.tool==="Muddler + Glass"||p.tool==="Muddler"?"🪵":"🍸";
- let html=`<div class="panel prepStation"><div class="prepHeader"><div><h2 style="margin:0">${d.icon} ${d.name}</h2><div class="tiny muted">${d.tech} • ${d.glass} • ${d.garnish}</div></div><span class="tag">${stage.toUpperCase()}</span></div>
- <div class="stationStage"><div class="barCounter"></div><div id="prepTool" class="tool">${stage==="ingredients"?toolIcon:spec.icon}</div><div class="liquid" style="height:${Math.min(82,p.added.length*11)}px"></div><div class="bottleAnim">🍾</div><div class="iceAnim">🧊</div><div class="bartenderAnim">${S.character.skin}</div></div>
+ let stageText=stage==="ingredients"?"Add the ingredients in the recipe order.":stage==="tool"?"Choose any equipment. The recipe's recommended tool is marked ★.":stage==="technique"?"Choose any technique. The recipe's recommended technique is marked ★.":stage==="perform"?"Perform your chosen technique. Your choice affects the final score.":"Technique complete. Finish the cocktail.";
+ let selectedTool=PREP_TOOLS.find(x=>x.id===p.tool);
+ let selectedTech=PREP_TECHS.find(x=>x.id===p.technique);
+ let toolIcon=selectedTool?.icon||"🍸";
+ let html=`<div class="panel prepStation"><div class="prepHeader"><div><h2 style="margin:0">${d.icon} ${d.name}</h2><div class="tiny muted">Recipe recommends: ${correct.name} • ${d.tech}</div></div><span class="tag">${stage.toUpperCase()}</span></div>
+ <div class="stationStage"><div class="barCounter"></div><div id="prepTool" class="tool">${stage==="ingredients"?toolIcon:(selectedTech?.icon||correct.icon)}</div><div class="liquid" style="height:${Math.min(82,p.added.length*11)}px"></div><div class="bottleAnim">🍾</div><div class="iceAnim">🧊</div><div class="bartenderAnim">${S.character.skin}</div></div>
  <div class="prepHint">${stageText}</div>
  ${stage==="ingredients"?`<h3>Add ingredients</h3><div class="prepIngredients">${d.need.map((x,i)=>`<button ${p.added.includes(x)?"disabled":""} onclick="prepAddIngredient('${x.replace(/'/g,"\\\\'")}')"><span style="font-size:20px">${I[x]||"•"}</span><br>${x}</button>`).join("")}</div><div class="prepBuild">${p.added.map((x,i)=>`<span class="chip">${i+1}. ${I[x]||"•"} ${x}</span>`).join("")||"<span class='tiny muted'>Nothing added yet</span>"}</div>${p.added.length===d.need.length?`<button class="primary" onclick="S.prep.stage='tool';renderPreparation()">Choose equipment</button>`:""}`:
- stage==="tool"?`<h3>Select equipment</h3><div class="prepTools"><button class="${p.tool===spec.tool?"selected":""}" onclick="prepChooseTool()">${spec.icon}<br>${spec.tool}</button></div><button class="primary" ${p.tool?"":"disabled"} onclick="S.prep.stage='technique';renderPreparation()">Continue</button>`:
- stage==="technique"?`<h3>Technique: ${d.tech}</h3><div class="card">Use the ${spec.tool}. When you're ready, begin the ${spec.action.toLowerCase()}.</div><button class="primary" onclick="prepStartTechnique()">▶ Start ${spec.action}</button>`:
- stage==="perform"?`<h3>${spec.action}</h3><div class="techMeter"><i id="techFill"></i></div><div class="tiny"><span id="techNum">0</span>%</div>`:
- `<h3>Finished</h3><div class="card"><b>Technique complete!</b><div class="tiny muted">Your preparation score will affect the final drink quality.</div></div><button class="primary" onclick="prepFinish()">Finish cocktail</button>`}
+ stage==="tool"?`<h3>Equipment</h3><div class="prepTools">${PREP_TOOLS.map(t=>`<button class="${p.tool===t.id?"selected":""}" onclick="prepChooseTool('${t.id}')">${t.icon}<br>${t.name}${t.id===correct.tool?"<br><b>★ Recommended</b>":""}</button>`).join("")}</div>${p.tool?`<button class="primary" onclick="S.prep.stage='technique';renderPreparation()">Choose technique</button>`:"<div class="tiny muted">You can choose any tool. The wrong choice will affect drink quality.</div>"}`:
+ stage==="technique"?`<h3>Mixing technique</h3><div class="prepTools">${PREP_TECHS.map(t=>`<button class="${p.technique===t.id?"selected":""}" onclick="prepChooseTechnique('${t.id}')">${t.icon}<br>${t.name}${t.id===d.tech||d.tech.includes(t.id)?"<br><b>★ Recommended</b>":""}</button>`).join("")}</div>${p.technique?`<div class="card"><b>${selectedTech.name}</b><div class="tiny muted">${selectedTech.desc}</div></div><button class="primary" onclick="prepStartTechnique()">▶ Start ${selectedTech.name}</button>`:"<div class='tiny muted'>Try different techniques. Only the correct one earns the best score.</div>"}`:
+ stage==="perform"?`<h3>${selectedTech?.name||"Technique"}</h3><div class="techMeter"><i id="techFill"></i></div><div class="tiny"><span id="techNum">0</span>%</div>`:
+ `<h3>Finished</h3><div class="card"><b>Technique complete!</b><div class="tiny muted">Equipment: ${selectedTool?.name||"Unknown"} • Technique: ${selectedTech?.name||"Unknown"}</div></div><button class="primary" onclick="prepFinish()">Finish cocktail</button>`}
  <div class="wrap" style="margin-top:10px"><button class="secondary" onclick="cancelPreparation()">Cancel</button></div></div>`;
  document.getElementById("app").innerHTML=`<header><div class="title">🍸 The Night Shift</div><div class="sub">${rank()} • ${S.own?S.ownName:currentBar().name}</div></header><main>${html}</main>`;
 }
