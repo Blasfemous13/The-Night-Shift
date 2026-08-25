@@ -91,7 +91,7 @@ Shake:"Shake hard with ice to chill, dilute and aerate. Essential for citrus and
 function fresh(){return{
 tab:"home",guide:"recipes",guideSearch:"",version:GAME_VERSION,
 lvl:1,xp:0,money:35,rep:0,shift:0,served:0,perfect:0,
-points:0,active:0,orders:[],event:null,seen:[],
+points:0,active:0,orders:[],event:null,seen:[],claimedEvents:[],
 skills:{speed:1,mixology:1,knowledge:1,charm:1,perception:1,management:1},
 character:{name:"Alex",skin:"🧑🏽",outfit:"Classic"},
 people:{},
@@ -101,7 +101,7 @@ own:false,ownName:"The Night Shift",staff:[],business:{price:1,quality:1,comfort
 settings:{sound:true,fastMode:false}
 }}
 let S=(()=>{try{return JSON.parse(localStorage.getItem("tns_final_test"))||fresh()}catch(e){return fresh()}})();
-function migrate(){let f=fresh();for(const k in f)if(S[k]===undefined)S[k]=f[k];if(!S.skills)S.skills=f.skills;if(!S.people)S.people={};if(!Array.isArray(S.recipes))S.recipes=[0,1];if(!S.settings)S.settings=f.settings;save()}
+function migrate(){let f=fresh();for(const k in f)if(S[k]===undefined)S[k]=f[k];if(!S.skills)S.skills=f.skills;if(!S.people)S.people={};if(!Array.isArray(S.claimedEvents))S.claimedEvents=[];if(!Array.isArray(S.recipes))S.recipes=[0,1];if(!S.settings)S.settings=f.settings;save()}
 migrate();
 const save=()=>localStorage.setItem("tns_final_test",JSON.stringify(S));
 const xpNeed=()=>80+S.lvl*35;
@@ -115,7 +115,7 @@ function gain(x,m,r){S.xp+=x;S.money+=m;S.rep+=r;while(S.xp>=xpNeed()){S.xp-=xpN
 function unlock(){
  BARS.forEach(b=>{if(S.lvl>=b.lvl&&!S.seen.includes("bar"+b.id)){S.seen.push("bar"+b.id);toast("New venue unlocked: "+b.name)}});
  DRINKS.forEach(d=>{if(S.lvl>=d.unlock&&!S.recipes.includes(d.id)&&S.skills.knowledge>=2){S.recipes.push(d.id);toast("Recipe learned: "+d.name)}});
- EVENTS.forEach(e=>{if(S.lvl>=e[0]&&!S.seen.includes(e[1])){S.seen.push(e[1]);S.event=e}});
+ EVENTS.forEach(e=>{let key="event:"+e[1];if(S.lvl>=e[0]&&!S.seen.includes(e[1])&&!S.claimedEvents.includes(key)){S.seen.push(e[1]);if(!S.event)S.event=e}});
  save()
 }
 function nav(t){S.tab=t;render()}
@@ -188,8 +188,17 @@ function career(){
  return`<div class="panel"><h2>Character</h2><div style="text-align:center;font-size:70px">${S.character.skin}</div><div class="row"><b>${S.character.name}</b><span>${rank()}</span></div><button class="secondary" style="margin-top:8px" onclick="customize()">Customize bartender</button></div><div class="panel"><div class="row"><h2 style="margin:0">Skill points</h2><span class="gold">${S.points}</span></div>${Object.entries(S.skills).map(([k,v])=>`<div class="card"><div class="row"><b>${k[0].toUpperCase()+k.slice(1)}</b><span>Lv ${v}</span></div><div class="small muted">${desc[k]}</div><button class="secondary" style="margin-top:6px" ${S.points<1?"disabled":""} onclick="spend('${k}')">Spend 1 point</button></div>`).join("")}</div><div class="panel"><h2>Career ladder</h2>${[["Barback",1],["Junior Bartender",4],["Bartender",8],["Senior Bartender",16],["Guest Bartender",24],["Bar Owner",30]].map(x=>`<div class="card ${S.lvl<x[1]?"locked":""}"><b>${S.lvl>=x[1]?"✓":"🔒"} ${x[0]}</b><div class="tiny muted">Level ${x[1]}</div></div>`).join("")}</div>`
 }
 function spend(k){if(S.points>0){S.points--;S.skills[k]++;unlock();save();render()}}
+function closeTopModal(){document.querySelector(".modal")?.remove()}
+function saveCustomization(){
+ const name=document.getElementById("nm");
+ S.character.name=(name?.value||"").trim()||"Alex";
+ save();
+ closeTopModal();
+ toast("Bartender profile saved");
+ render();
+}
 function customize(){
- let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>Customize bartender</h2><input id="nm" value="${S.character.name}" style="width:100%;padding:10px;border-radius:9px;border:1px solid #4b3b55;background:#241a2d;color:white"><h3>Appearance</h3><div class="grid2">${["🧑🏽","👩🏽","🧑🏻","👩🏻","🧑🏾","👩🏾","🧑🏿","👩🏿"].map(a=>`<button class="choice ${S.character.skin===a?"on":""}" onclick="S.character.skin='${a}';document.querySelectorAll('.choice').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${a}</button>`).join("")}</div><h3>Outfit</h3><div class="grid2">${["Classic","Vest","Shirt","Luxury"].map(a=>`<button class="choice ${S.character.outfit===a?"on":""}" onclick="S.character.outfit='${a}';document.querySelectorAll('.choice').forEach(b=>b.classList.remove('on'));this.classList.add('on')">👔 ${a}</button>`).join("")}</div><div class="wrap" style="margin-top:10px"><button class="primary" onclick="S.character.name=document.getElementById('nm').value.trim()||'Alex';save();x.remove();render()">Save</button><button class="secondary" onclick="x.remove()">Cancel</button></div></div>`;document.body.appendChild(x)
+ let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>Customize bartender</h2><input id="nm" value="${S.character.name}" style="width:100%;padding:10px;border-radius:9px;border:1px solid #4b3b55;background:#241a2d;color:white"><h3>Appearance</h3><div class="grid2">${["🧑🏽","👩🏽","🧑🏻","👩🏻","🧑🏾","👩🏾","🧑🏿","👩🏿"].map(a=>`<button class="choice ${S.character.skin===a?"on":""}" onclick="S.character.skin='${a}';document.querySelectorAll('.choice').forEach(b=>b.classList.remove('on'));this.classList.add('on')">${a}</button>`).join("")}</div><h3>Outfit</h3><div class="grid2">${["Classic","Vest","Shirt","Luxury"].map(a=>`<button class="choice ${S.character.outfit===a?"on":""}" onclick="S.character.outfit='${a}';document.querySelectorAll('.choice').forEach(b=>b.classList.remove('on'));this.classList.add('on')">👔 ${a}</button>`).join("")}</div><div class="wrap" style="margin-top:10px"><button class="primary" onclick="saveCustomization()">Save</button><button class="secondary" onclick="closeTopModal()">Cancel</button></div></div>`;document.body.appendChild(x)
 }
 function people(){
  return`<div class="panel"><h2>People & Regulars</h2><p class="small muted">Every guest remembers drinks, conversations and your service. Learn their preferences and they'll become part of your story.</p>${PEOPLE.map(p=>{let d=S.people[p.id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};let fav=Object.entries(d.favorites||{}).sort((a,b)=>b[1]-a[1])[0];return`<div class="card"><div class="customer"><div class="avatar">${p.emoji}</div><div><b>${p.name}</b> ${d.regular?'<span class="tag">REGULAR</span>':''}<div class="small muted">${p.bio}</div></div></div><div class="row small" style="margin-top:7px"><span>Relationship</span><span>${d.rel||0}/100</span></div><div class="meter"><i style="width:${d.rel||0}%"></i></div><div class="tiny muted" style="margin-top:6px">Visits: ${d.visits||0}${fav?" • Favorite: "+fav[0]:""}${d.known?.length?" • Learned: "+d.known.join(", "):""}</div><div class="tiny gold" style="margin-top:5px">Likes: ${p.likes.join(" • ")}</div></div>`}).join("")}</div>`
@@ -234,6 +243,24 @@ function runDiagnostics(){
  let bad=checks.filter(x=>!x[1]);if(bad.length)console.error(bad)
 }
 function resetSave(){if(confirm("Delete all The Night Shift progress on this device?")){localStorage.removeItem("tns_final_test");location.reload()}}
-function eventModal(){let e=S.event,x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><div class="tiny gold">STORY EVENT</div><h2>${e[1]}</h2><p>${e[2]}</p><div class="card">Reward: +${e[3]} XP • €${e[4]} • +${e[5]} reputation</div><button class="primary" onclick="gain(${e[3]},${e[4]},${e[5]});S.event=null;render()">Continue</button></div>`;document.body.appendChild(x)}
+function claimEvent(){
+ if(!S.event)return;
+ const e=S.event;
+ const key="event:"+e[1];
+ if(S.claimedEvents?.includes(key)){S.event=null;closeTopModal();render();return}
+ S.claimedEvents=S.claimedEvents||[];
+ S.claimedEvents.push(key);
+ S.event=null;
+ closeTopModal();
+ gain(e[3],e[4],e[5]);
+ toast("Story event completed • reward claimed once");
+ render();
+}
+function eventModal(){
+ if(!S.event)return;
+ let e=S.event,x=document.createElement("div");x.className="modal";
+ x.innerHTML=`<div class="panel"><div class="tiny gold">STORY EVENT</div><h2>${e[1]}</h2><p>${e[2]}</p><div class="card">Reward: +${e[3]} XP • €${e[4]} • +${e[5]} reputation</div><button class="primary" onclick="claimEvent()">Continue</button></div>`;
+ document.body.appendChild(x)
+}
 unlock();render();
 </script></body></html>
