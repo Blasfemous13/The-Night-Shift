@@ -37,7 +37,7 @@ input{outline:none}
 </head>
 <body><div id="app"></div>
 <script>
-const GAME_VERSION="6.0.0-FINAL-TEST";
+const GAME_VERSION="6.4.0-FINAL-TEST";
 const DRINKS=[
 {id:0,name:"Highball",cat:"Long",tech:"Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Whisky","Soda","Lemon"],icon:"🥃",pay:10,xp:8,notes:"Fast, clean and refreshing.",unlock:1},
 {id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Balance spirit, sweetness and dilution.",unlock:1},
@@ -153,7 +153,7 @@ function shift(){
 function pick(x){let o=S.orders[S.active];if(!o||o.done)return;o.build.push(x);o.patience=Math.max(0,o.patience-(S.up.ice?2:3)-(S.skills.speed-1));sound(330,.025);render()}
 function askClue(id){let p=personById(id),d=S.people[id]||{rel:0};let clue=p.prefs[Math.floor(Math.random()*p.prefs.length)];if(S.skills.perception>=2){toast(p.name+" seems to prefer "+clue+" drinks.");d.rel=Math.min(100,(d.rel||0)+1);S.people[id]=d;save()}else toast("You notice very little. Invest in Perception to read guests better.")}
 function dialogue(id){
- let p=personById(id),x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>Talk to ${p.name}</h2><p class="muted">${p.bio}</p><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','night')">Ask about their night</button></div><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','taste')">Ask what they usually like</button></div><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','life')">Ask a personal question</button></div><button class="secondary" onclick="x.remove()">Close</button></div>`;document.body.appendChild(x)
+ let p=personById(id),x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>Talk to ${p.name}</h2><p class="muted">${p.bio}</p><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','night')">Ask about their night</button></div><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','taste')">Ask what they usually like</button></div><div class="card"><button class="secondary" style="width:100%" onclick="talk('${id}','life')">Ask a personal question</button></div><button class="secondary" onclick="closeTopModal()">Close</button></div>`;document.body.appendChild(x)
 }
 function talk(id,type){
  let p=personById(id),d=S.people[id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};let amount=type==="taste"?5:3;d.rel=Math.min(100,(d.rel||0)+amount);if(!d.known)d.known=[];if(type==="taste"&&!d.known.includes(p.prefs[0]))d.known.push(p.prefs[0]);S.people[id]=d;save();document.querySelector(".modal")?.remove();toast(type==="taste"?p.name+" shared a preference. +5 relationship":"Good conversation • relationship +"+amount);render()
@@ -181,7 +181,15 @@ function serveOrder(){
 }
 function shiftSummary(){
  let x=document.createElement("div");x.className="modal";let perfect=S.orders.filter(o=>{let d=drinkById(o.drink);return o.build.length===d.need.length&&o.build.every((v,i)=>v===d.need[i])}).length;
- x.innerHTML=`<div class="panel"><div class="bigResult"><div class="icon">🌙</div><h2>Shift complete</h2><div class="score">${perfect}/${S.orders.length}</div><div class="muted">perfect drinks</div></div><div class="grid2"><div class="card"><b>Guests</b><div>${S.orders.length}</div></div><div class="card"><b>Regulars</b><div>${Object.values(S.people).filter(p=>p.regular).length}</div></div></div><button class="primary" onclick="x.remove();S.orders=[];nav('home')">Close shift</button></div>`;document.body.appendChild(x)
+ x.innerHTML=`<div class="panel"><div class="bigResult"><div class="icon">🌙</div><h2>Shift complete</h2><div class="score">${perfect}/${S.orders.length}</div><div class="muted">perfect drinks</div></div><div class="grid2"><div class="card"><b>Guests</b><div>${S.orders.length}</div></div><div class="card"><b>Regulars</b><div>${Object.values(S.people).filter(p=>p.regular).length}</div></div></div><button class="primary" onclick="finishShift()">Close shift</button></div>`;document.body.appendChild(x)
+}
+function finishShift(){
+ S.orders=[];
+ save();
+ closeTopModal();
+ S.tab="home";
+ render();
+ toast("Shift closed • progress saved");
 }
 function career(){
  let desc={speed:"Faster tickets and better patience.",mixology:"Higher quality rewards.",knowledge:"Unlocks recipes and reveals clues.",charm:"Better tips and relationship gains.",perception:"Better guest preference clues.",management:"Improves business systems."};
@@ -226,8 +234,22 @@ function buyOwn(){if(S.lvl>=30&&S.money>=5000&&S.rep>=100){S.money-=5000;S.own=t
 function ownUpgrade(k,c){if(S.money<c)return;S.money-=c;if(k==="price")S.business.price=Math.min(1.8,S.business.price+.2);if(k==="quality")S.business.quality++;if(k==="comfort")S.business.comfort++;save();toast("Business upgraded");render()}
 function hire(){if(S.money>=600){S.money-=600;let names=["Lena","Tom","Jordan","Bea","Sam","Noah"];S.staff.push({name:names[S.staff.length%names.length],role:"Bartender",lv:1});save();toast("New bartender hired");render()}}
 function renameBar(){let n=prompt("Name your bar",S.ownName);if(n){S.ownName=n.trim().slice(0,30)||S.ownName;save();render()}}
+function toggleSound(btn){
+ S.settings.sound=!S.settings.sound;
+ save();
+ btn.textContent=S.settings.sound?"ON":"OFF";
+ btn.setAttribute("aria-pressed",String(S.settings.sound));
+ if(S.settings.sound){sound(660,.08);toast("Sound ON")}else{toast("Sound OFF")}
+}
+function toggleFastMode(btn){
+ S.settings.fastMode=!S.settings.fastMode;
+ save();
+ btn.textContent=S.settings.fastMode?"ON":"OFF";
+ btn.setAttribute("aria-pressed",String(S.settings.fastMode));
+ toast(S.settings.fastMode?"Fast mode ON":"Fast mode OFF");
+}
 function settings(){
- let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button class="secondary" onclick="S.settings.sound=!S.settings.sound;save();x.remove();settings()">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button class="secondary" onclick="S.settings.fastMode=!S.settings.fastMode;save();x.remove();settings()">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">Two tickets per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="x.remove()">Close</button></div>`;document.body.appendChild(x)
+ let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button id="soundToggle" class="secondary" onclick="toggleSound(this)">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button id="fastToggle" class="secondary" onclick="toggleFastMode(this)">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">Two tickets per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="x.remove()">Close</button></div>`;document.body.appendChild(x)
 }
 function runDiagnostics(){
  let checks=[
