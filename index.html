@@ -101,9 +101,9 @@ own:false,ownName:"The Night Shift",staff:[],business:{price:1,quality:1,comfort
 settings:{sound:true,fastMode:false}
 }}
 let S=(()=>{try{return JSON.parse(localStorage.getItem("tns_final_test"))||fresh()}catch(e){return fresh()}})();
+const save=()=>localStorage.setItem("tns_final_test",JSON.stringify(S));
 function migrate(){let f=fresh();for(const k in f)if(S[k]===undefined)S[k]=f[k];if(!S.skills)S.skills=f.skills;if(!S.people)S.people={};if(!Array.isArray(S.claimedEvents))S.claimedEvents=[];if(!Array.isArray(S.recipes))S.recipes=[0,1];if(!S.settings)S.settings=f.settings;save()}
 migrate();
-const save=()=>localStorage.setItem("tns_final_test",JSON.stringify(S));
 const xpNeed=()=>80+S.lvl*35;
 const rank=()=>S.lvl<4?"Barback":S.lvl<8?"Junior Bartender":S.lvl<16?"Bartender":S.lvl<24?"Senior Bartender":S.lvl<30?"Guest Bartender":"Bar Owner";
 const currentBar=()=>BARS[S.bar];
@@ -262,5 +262,15 @@ function eventModal(){
  x.innerHTML=`<div class="panel"><div class="tiny gold">STORY EVENT</div><h2>${e[1]}</h2><p>${e[2]}</p><div class="card">Reward: +${e[3]} XP • €${e[4]} • +${e[5]} reputation</div><button class="primary" onclick="claimEvent()">Continue</button></div>`;
  document.body.appendChild(x)
 }
-unlock();render();
+window.addEventListener("error",function(ev){
+ const app=document.getElementById("app");
+ if(app && !app.innerHTML.trim()){
+  app.innerHTML='<div style="padding:24px;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif"><h2>The Night Shift could not start</h2><p style="color:#aaa">A JavaScript error stopped the game from loading.</p><div style="background:#211728;border:1px solid #5a405f;border-radius:10px;padding:12px;font-family:monospace;font-size:12px;word-break:break-word">'+String(ev.message||"Unknown error")+'</div><p style="color:#aaa;font-size:12px">Take a screenshot of this message and send it to the developer.</p></div>';
+ }
+});
+try{unlock();render()}catch(err){
+ const app=document.getElementById("app");
+ if(app)app.innerHTML='<div style="padding:24px;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif"><h2>The Night Shift could not start</h2><p style="color:#aaa">Startup error:</p><div style="background:#211728;border:1px solid #5a405f;border-radius:10px;padding:12px;font-family:monospace;font-size:12px;word-break:break-word">'+String(err&&err.message||err)+'</div></div>';
+ console.error(err);
+}
 </script></body></html>
