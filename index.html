@@ -70,11 +70,11 @@ radial-gradient(circle at 50% 65%,#3a253f 0,#17101d 42%,#0c0810 100%);border:1px
 .techMeter{height:11px;background:#302532;border-radius:20px;overflow:hidden;margin:6px 0}
 .techMeter i{display:block;height:100%;width:0;background:linear-gradient(90deg,#d66b6b,#e7c25f,#67d996);transition:width .12s}
 .prepHint{font-size:10px;color:var(--muted);min-height:28px}
-</style>
+.menuScreen{min-height:100vh;display:grid;place-items:center;padding:28px 20px;background:radial-gradient(circle at 50% 25%,#41204f 0,#17101f 42%,#08060b 100%);text-align:center}.menuLogo{width:100%;max-width:480px}.menuGlass{font-size:78px}.menuLogo h1{font-size:39px;letter-spacing:4px;margin:8px 0}.menuLogo>p{font-size:10px;letter-spacing:5px;color:#c2a8cb;margin:0 0 30px}.menuButtons{display:grid;gap:10px;width:min(100%,330px);margin:auto}.menuBtn{width:100%;min-height:52px;font-size:13px;letter-spacing:1.5px;font-weight:900}</style>
 </head>
 <body><div id="app"></div>
 <script>
-const GAME_VERSION="8.2.0-CHOICE-PREP";
+const GAME_VERSION="8.3.0-FIXED";
 const DRINKS=[
 {id:0,name:"Highball",cat:"Long",tech:"Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Whisky","Soda","Lemon"],icon:"🥃",pay:10,xp:8,notes:"Fast, clean and refreshing.",unlock:1},
 {id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Build over a large cube; balance spirit, sweetness and dilution, then garnish with orange.",unlock:1},
@@ -166,6 +166,12 @@ function unlock(){
  save()
 }
 function nav(t){S.tab=t;render()}
+function hasSavedGame(){try{let raw=localStorage.getItem("tns_final_test");if(!raw)return false;let d=JSON.parse(raw);return !!d&&(d.lvl>1||d.served>0||d.money!==35||d.shift>0||d.own)}catch(e){return false}}
+function startNewGame(){if(hasSavedGame()&&!confirm("Start a new game? This replaces the current local save."))return;S=fresh();migrate();save();render()}
+function continueGame(){if(hasSavedGame()){migrate();save();render()}else{toast("No saved game found.")}}
+function showTutorial(){let x=document.createElement("div");x.className="modal";x.innerHTML='<div class="panel"><div class="tiny gold">THE NIGHT SHIFT</div><h2>📖 Tutorial</h2><div class="card"><b>Work shifts</b><p class="small muted">Serve customers, make cocktails and build your reputation.</p></div><div class="card"><b>Prepare drinks</b><p class="small muted">Add ingredients, choose equipment and choose a mixing technique. Correct choices score higher.</p></div><div class="card"><b>Build your career</b><p class="small muted">Earn XP, unlock skills and meet guests who can become regulars.</p></div><button class="primary" onclick="this.closest(\'.modal\').remove()">Back</button></div>';document.body.appendChild(x)}
+function showCredits(){let x=document.createElement("div");x.className="modal";x.innerHTML='<div class="panel" style="text-align:center"><div style="font-size:62px">🍸</div><h2>The Night Shift</h2><p class="muted">A bartender career simulation.</p><div class="line"></div><p class="small">Independent game project.</p><p class="tiny muted">'+GAME_VERSION+'</p><button class="primary" onclick="this.closest(\'.modal\').remove()">Back</button></div>';document.body.appendChild(x)}
+function titleScreen(){let saved=hasSavedGame();document.getElementById("app").innerHTML='<div class="menuScreen"><div class="menuLogo"><div class="menuGlass">🍸</div><h1>THE NIGHT SHIFT</h1><p>THE BAR NEVER SLEEPS</p><div class="menuButtons"><button class="menuBtn primary" onclick="startNewGame()">START GAME</button><button class="menuBtn secondary" '+(saved?"":"disabled")+' onclick="continueGame()">CONTINUE GAME</button><button class="menuBtn secondary" onclick="showTutorial()">TUTORIAL</button><button class="menuBtn secondary" onclick="showCredits()">CREDITS</button><button class="menuBtn secondary" onclick="toast(\'You can close this browser tab.\')">EXIT</button></div><div class="tiny muted" style="margin-top:18px">Build '+GAME_VERSION+'</div></div></div>'}
 function render(){
  let pct=Math.min(100,S.xp/xpNeed()*100);
  document.getElementById("app").innerHTML=`<header><div class="title">🍸 The Night Shift</div><div class="sub">${rank()} • ${S.own?S.ownName:currentBar().name}</div><div class="stats"><div class="stat">LEVEL<b>${S.lvl}</b></div><div class="stat">XP<b>${S.xp}/${xpNeed()}</b></div><div class="stat">💰<b>€${S.money}</b></div><div class="stat">⭐<b>${S.rep}</b></div></div><div class="xp"><i style="width:${pct}%"></i></div></header><main>${page()}</main><nav>${[["home","🏠","Home"],["shift","🍸","Shift"],["career","📈","Career"],["people","👥","People"],["guide","📚","Guide"],["bar","🏪","Venues"],["own","🏗️","My Bar"]].map(x=>`<button class="${S.tab===x[0]?"on":""}" onclick="nav('${x[0]}')"><b>${x[1]}</b>${x[2]}</button>`).join("")}</nav>`;
@@ -315,17 +321,33 @@ function renderPreparation(){
  let stageText=stage==="ingredients"?"Add the ingredients in the recipe order.":stage==="tool"?"Choose any equipment. The recipe's recommended tool is marked ★.":stage==="technique"?"Choose any technique. The recipe's recommended technique is marked ★.":stage==="perform"?"Perform your chosen technique. Your choice affects the final score.":"Technique complete. Finish the cocktail.";
  let selectedTool=PREP_TOOLS.find(x=>x.id===p.tool);
  let selectedTech=PREP_TECHS.find(x=>x.id===p.technique);
- let toolIcon=selectedTool?.icon||"🍸";
- let html=`<div class="panel prepStation"><div class="prepHeader"><div><h2 style="margin:0">${d.icon} ${d.name}</h2><div class="tiny muted">Recipe recommends: ${correct.name} • ${d.tech}</div></div><span class="tag">${stage.toUpperCase()}</span></div>
- <div class="stationStage"><div class="barCounter"></div><div id="prepTool" class="tool">${stage==="ingredients"?toolIcon:(selectedTech?.icon||correct.icon)}</div><div class="liquid" style="height:${Math.min(82,p.added.length*11)}px"></div><div class="bottleAnim">🍾</div><div class="iceAnim">🧊</div><div class="bartenderAnim">${S.character.skin}</div></div>
- <div class="prepHint">${stageText}</div>
- ${stage==="ingredients"?`<h3>Add ingredients</h3><div class="prepIngredients">${d.need.map((x,i)=>`<button ${p.added.includes(x)?"disabled":""} onclick="prepAddIngredient('${x.replace(/'/g,"\\\\'")}')"><span style="font-size:20px">${I[x]||"•"}</span><br>${x}</button>`).join("")}</div><div class="prepBuild">${p.added.map((x,i)=>`<span class="chip">${i+1}. ${I[x]||"•"} ${x}</span>`).join("")||"<span class='tiny muted'>Nothing added yet</span>"}</div>${p.added.length===d.need.length?`<button class="primary" onclick="S.prep.stage='tool';renderPreparation()">Choose equipment</button>`:""}`:
- stage==="tool"?`<h3>Equipment</h3><div class="prepTools">${PREP_TOOLS.map(t=>`<button class="${p.tool===t.id?"selected":""}" onclick="prepChooseTool('${t.id}')">${t.icon}<br>${t.name}${t.id===correct.tool?"<br><b>★ Recommended</b>":""}</button>`).join("")}</div>${p.tool?`<button class="primary" onclick="S.prep.stage='technique';renderPreparation()">Choose technique</button>`:"<div class="tiny muted">You can choose any tool. The wrong choice will affect drink quality.</div>"}`:
- stage==="technique"?`<h3>Mixing technique</h3><div class="prepTools">${PREP_TECHS.map(t=>`<button class="${p.technique===t.id?"selected":""}" onclick="prepChooseTechnique('${t.id}')">${t.icon}<br>${t.name}${t.id===d.tech||d.tech.includes(t.id)?"<br><b>★ Recommended</b>":""}</button>`).join("")}</div>${p.technique?`<div class="card"><b>${selectedTech.name}</b><div class="tiny muted">${selectedTech.desc}</div></div><button class="primary" onclick="prepStartTechnique()">▶ Start ${selectedTech.name}</button>`:"<div class='tiny muted'>Try different techniques. Only the correct one earns the best score.</div>"}`:
- stage==="perform"?`<h3>${selectedTech?.name||"Technique"}</h3><div class="techMeter"><i id="techFill"></i></div><div class="tiny"><span id="techNum">0</span>%</div>`:
- `<h3>Finished</h3><div class="card"><b>Technique complete!</b><div class="tiny muted">Equipment: ${selectedTool?.name||"Unknown"} • Technique: ${selectedTech?.name||"Unknown"}</div></div><button class="primary" onclick="prepFinish()">Finish cocktail</button>`}
- <div class="wrap" style="margin-top:10px"><button class="secondary" onclick="cancelPreparation()">Cancel</button></div></div>`;
- document.getElementById("app").innerHTML=`<header><div class="title">🍸 The Night Shift</div><div class="sub">${rank()} • ${S.own?S.ownName:currentBar().name}</div></header><main>${html}</main>`;
+ let toolIcon=selectedTool?selectedTool.icon:"🍸";
+ let content="";
+ if(stage==="ingredients"){
+   let buttons=d.need.map(function(x){
+     let disabled=p.added.includes(x)?" disabled":"";
+     return '<button'+disabled+' onclick="prepAddIngredient(\''+x.replace(/'/g,"\\'")+'\')"><span style="font-size:20px">'+(I[x]||"•")+'</span><br>'+x+'</button>';
+   }).join("");
+   let chips=p.added.map(function(x,i){return '<span class="chip">'+(i+1)+'. '+(I[x]||"•")+' '+x+'</span>';}).join("");
+   content='<h3>Add ingredients</h3><div class="prepIngredients">'+buttons+'</div><div class="prepBuild">'+(chips||"<span class='tiny muted'>Nothing added yet</span>")+'</div>';
+   if(p.added.length===d.need.length)content+='<button class="primary" onclick="S.prep.stage=\'tool\';renderPreparation()">Choose equipment</button>';
+ }else if(stage==="tool"){
+   let buttons=PREP_TOOLS.map(function(t){return '<button class="'+(p.tool===t.id?"selected":"")+'" onclick="prepChooseTool(\''+t.id+'\')">'+t.icon+'<br>'+t.name+(t.id===correct.tool?'<br><b>★ Recommended</b>':"")+'</button>';}).join("");
+   content='<h3>Equipment</h3><div class="prepTools">'+buttons+'</div>';
+   content+=p.tool?'<button class="primary" onclick="S.prep.stage=\'technique\';renderPreparation()">Choose technique</button>':'<div class="tiny muted">You can choose any tool. The wrong choice will affect drink quality.</div>';
+ }else if(stage==="technique"){
+   let buttons=PREP_TECHS.map(function(t){let rec=(t.id===d.tech||d.tech.includes(t.id));return '<button class="'+(p.technique===t.id?"selected":"")+'" onclick="prepChooseTechnique(\''+t.id+'\')">'+t.icon+'<br>'+t.name+(rec?'<br><b>★ Recommended</b>':"")+'</button>';}).join("");
+   content='<h3>Mixing technique</h3><div class="prepTools">'+buttons+'</div>';
+   if(p.technique)content+='<div class="card"><b>'+selectedTech.name+'</b><div class="tiny muted">'+selectedTech.desc+'</div></div><button class="primary" onclick="prepStartTechnique()">▶ Start '+selectedTech.name+'</button>';
+   else content+='<div class="tiny muted">Try different techniques. Only the correct one earns the best score.</div>';
+ }else if(stage==="perform"){
+   content='<h3>'+(selectedTech?selectedTech.name:"Technique")+'</h3><div class="techMeter"><i id="techFill"></i></div><div class="tiny"><span id="techNum">0</span>%</div>';
+ }else{
+   content='<h3>Finished</h3><div class="card"><b>Technique complete!</b><div class="tiny muted">Equipment: '+(selectedTool?selectedTool.name:"Unknown")+' • Technique: '+(selectedTech?selectedTech.name:"Unknown")+'</div></div><button class="primary" onclick="prepFinish()">Finish cocktail</button>';
+ }
+ let stageIcon=stage==="ingredients"?toolIcon:(selectedTech?selectedTech.icon:correct.icon);
+ let appHtml='<div class="panel prepStation"><div class="prepHeader"><div><h2 style="margin:0">'+d.icon+' '+d.name+'</h2><div class="tiny muted">Recipe recommends: '+correct.name+' • '+d.tech+'</div></div><span class="tag">'+stage.toUpperCase()+'</span></div><div class="stationStage"><div class="barCounter"></div><div id="prepTool" class="tool">'+stageIcon+'</div><div class="liquid" style="height:'+Math.min(82,p.added.length*11)+'px"></div><div class="bottleAnim">🍾</div><div class="iceAnim">🧊</div><div class="bartenderAnim">'+S.character.skin+'</div></div><div class="prepHint">'+stageText+'</div>'+content+'<div class="wrap" style="margin-top:10px"><button class="secondary" onclick="cancelPreparation()">Cancel</button></div></div>';
+ document.getElementById("app").innerHTML='<header><div class="title">🍸 The Night Shift</div><div class="sub">'+rank()+' • '+(S.own?S.ownName:currentBar().name)+'</div></header><main>'+appHtml+'</main>';
 }
 function serveOrder(){
  let o=S.orders[S.active],d=drinkById(o.drink),p=personById(o.person);if(!o||o.done)return;
@@ -482,7 +504,7 @@ window.addEventListener("error",function(ev){
   app.innerHTML='<div style="padding:24px;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif"><h2>The Night Shift could not start</h2><p style="color:#aaa">A JavaScript error stopped the game from loading.</p><div style="background:#211728;border:1px solid #5a405f;border-radius:10px;padding:12px;font-family:monospace;font-size:12px;word-break:break-word">'+String(ev.message||"Unknown error")+'</div><p style="color:#aaa;font-size:12px">Take a screenshot of this message and send it to the developer.</p></div>';
  }
 });
-try{unlock();render()}catch(err){
+try{unlock();titleScreen()}catch(err){
  const app=document.getElementById("app");
  if(app)app.innerHTML='<div style="padding:24px;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif"><h2>The Night Shift could not start</h2><p style="color:#aaa">Startup error:</p><div style="background:#211728;border:1px solid #5a405f;border-radius:10px;padding:12px;font-family:monospace;font-size:12px;word-break:break-word">'+String(err&&err.message||err)+'</div></div>';
  console.error(err);
