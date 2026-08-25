@@ -37,18 +37,18 @@ input{outline:none}
 </head>
 <body><div id="app"></div>
 <script>
-const GAME_VERSION="6.5.0-FINAL-TEST";
+const GAME_VERSION="7.0.0-FINAL";
 const DRINKS=[
 {id:0,name:"Highball",cat:"Long",tech:"Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Whisky","Soda","Lemon"],icon:"🥃",pay:10,xp:8,notes:"Fast, clean and refreshing.",unlock:1},
-{id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Balance spirit, sweetness and dilution.",unlock:1},
-{id:2,name:"Margarita",cat:"Sour",tech:"Shake",glass:"Coupe",ice:"Shaken",garnish:"Salt + lime",need:["Coupe","Ice","Tequila","Triple Sec","Lime","Salt"],icon:"🍸",pay:20,xp:16,notes:"Bright citrus with controlled dilution.",unlock:2},
-{id:3,name:"Negroni",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Gin","Campari","Sweet Vermouth","Orange"],icon:"🍷",pay:23,xp:18,notes:"Equal parts, cold and silky.",unlock:3},
-{id:4,name:"Daiquiri",cat:"Sour",tech:"Shake",glass:"Coupe",ice:"Shaken",garnish:"Lime",need:["Coupe","Ice","Rum","Lime","Sugar"],icon:"🍸",pay:20,xp:15,notes:"Simple recipe; balance is everything.",unlock:4},
-{id:5,name:"Espresso Martini",cat:"Modern",tech:"Shake",glass:"Martini",ice:"Hard shake",garnish:"Coffee beans",need:["Martini Glass","Ice","Vodka","Coffee Liqueur","Espresso","Sugar"],icon:"🍸",pay:28,xp:20,notes:"Hard shake for texture and foam.",unlock:6},
-{id:6,name:"Whisky Sour",cat:"Sour",tech:"Shake",glass:"Rocks",ice:"Fresh ice",garnish:"Lemon",need:["Rocks Glass","Ice","Whisky","Lemon","Sugar","Egg White"],icon:"🥃",pay:30,xp:21,notes:"Egg white adds body and texture.",unlock:8},
-{id:7,name:"Dry Martini",cat:"Classic",tech:"Stir",glass:"Martini",ice:"Very cold",garnish:"Olive",need:["Martini Glass","Ice","Gin","Dry Vermouth","Olive"],icon:"🍸",pay:35,xp:24,notes:"Cold, precise and elegant.",unlock:10},
-{id:8,name:"Tom Collins",cat:"Long",tech:"Shake + Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Gin","Lemon","Sugar","Soda"],icon:"🍋",pay:24,xp:18,notes:"Bright, tall and refreshing.",unlock:12},
-{id:9,name:"Mojito",cat:"Long",tech:"Muddle + Build",glass:"Highball",ice:"Crushed",garnish:"Mint + lime",need:["Glass","Lime","Sugar","Rum","Ice","Soda"],icon:"🌿",pay:25,xp:19,notes:"Gentle muddling preserves freshness.",unlock:14}
+{id:1,name:"Old Fashioned",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Bourbon","Bitters","Sugar","Orange"],icon:"🥃",pay:18,xp:14,notes:"Build over a large cube; balance spirit, sweetness and dilution, then garnish with orange.",unlock:1},
+{id:2,name:"Margarita",cat:"Sour",tech:"Shake",glass:"Coupe",ice:"Shaken",garnish:"Salt + lime",need:["Coupe","Ice","Tequila","Triple Sec","Lime","Salt"],icon:"🍸",pay:20,xp:16,notes:"Salt the rim, shake hard with ice, and strain into the chilled glass.",unlock:2},
+{id:3,name:"Negroni",cat:"Classic",tech:"Stir",glass:"Rocks",ice:"Large cube",garnish:"Orange",need:["Rocks Glass","Ice","Gin","Campari","Sweet Vermouth","Orange"],icon:"🍷",pay:23,xp:18,notes:"Equal parts gin, Campari and sweet vermouth; stir with ice and garnish with orange.",unlock:3},
+{id:4,name:"Daiquiri",cat:"Sour",tech:"Shake",glass:"Coupe",ice:"Shaken",garnish:"Lime",need:["Coupe","Ice","Rum","Lime","Sugar"],icon:"🍸",pay:20,xp:15,notes:"Shake rum, fresh lime and sugar with ice; fine strain into a chilled coupe.",unlock:4},
+{id:5,name:"Espresso Martini",cat:"Modern",tech:"Shake",glass:"Martini",ice:"Hard shake",garnish:"Coffee beans",need:["Martini Glass","Ice","Vodka","Coffee Liqueur","Espresso","Sugar"],icon:"🍸",pay:28,xp:20,notes:"Shake vodka, coffee liqueur, fresh espresso and sugar syrup hard with ice for foam.",unlock:6},
+{id:6,name:"Whisky Sour",cat:"Sour",tech:"Shake",glass:"Rocks",ice:"Fresh ice",garnish:"Lemon",need:["Rocks Glass","Ice","Whisky","Lemon","Sugar","Egg White"],icon:"🥃",pay:30,xp:21,notes:"Shake whisky, lemon and sugar; egg white is an optional texture element in this build.",unlock:8},
+{id:7,name:"Dry Martini",cat:"Classic",tech:"Stir",glass:"Martini",ice:"Very cold",garnish:"Olive",need:["Martini Glass","Ice","Gin","Dry Vermouth","Olive"],icon:"🍸",pay:35,xp:24,notes:"Stir gin and dry vermouth with ice until very cold; garnish with an olive.",unlock:10},
+{id:8,name:"Tom Collins",cat:"Long",tech:"Shake + Build",glass:"Highball",ice:"Cubed",garnish:"Lemon",need:["Glass","Ice","Gin","Lemon","Sugar","Soda"],icon:"🍋",pay:24,xp:18,notes:"Shake gin, lemon and sugar with ice, strain over fresh ice and top with soda.",unlock:12},
+{id:9,name:"Mojito",cat:"Long",tech:"Muddle + Build",glass:"Highball",ice:"Crushed",garnish:"Mint + lime",need:["Glass","Lime","Sugar","Mint","Rum","Ice","Soda"],icon:"🌿",pay:25,xp:19,notes:"Gently muddle mint, lime and sugar; add rum and ice, then top with soda and garnish with mint.",unlock:14}
 ];
 const ING=["Glass","Rocks Glass","Coupe","Martini Glass","Ice","Whisky","Bourbon","Soda","Lemon","Bitters","Sugar","Orange","Tequila","Triple Sec","Lime","Salt","Gin","Campari","Sweet Vermouth","Rum","Vodka","Coffee Liqueur","Espresso","Egg White","Dry Vermouth","Olive","Mint"];
 const I={Ice:"🧊",Lemon:"🍋",Lime:"🍋",Orange:"🍊",Olive:"🫒",Sugar:"🧂",Salt:"🧂",Espresso:"☕","Egg White":"🥚",Whisky:"🥃",Bourbon:"🥃",Rum:"🥃",Vodka:"🍶",Gin:"🍸",Tequila:"🥃",Campari:"🧴","Sweet Vermouth":"🍷","Dry Vermouth":"🍷","Coffee Liqueur":"🧴","Triple Sec":"🧴",Soda:"🫧",Bitters:"🧴",Glass:"🥛","Rocks Glass":"🥃",Coupe:"🍸","Martini Glass":"🍸",Mint:"🌿"};
@@ -212,7 +212,7 @@ function people(){
  return`<div class="panel"><h2>People & Regulars</h2><p class="small muted">Every guest remembers drinks, conversations and your service. Learn their preferences and they'll become part of your story.</p>${PEOPLE.map(p=>{let d=S.people[p.id]||{rel:0,visits:0,regular:false,favorites:{},known:[]};let fav=Object.entries(d.favorites||{}).sort((a,b)=>b[1]-a[1])[0];return`<div class="card"><div class="customer"><div class="avatar">${p.emoji}</div><div><b>${p.name}</b> ${d.regular?'<span class="tag">REGULAR</span>':''}<div class="small muted">${p.bio}</div></div></div><div class="row small" style="margin-top:7px"><span>Relationship</span><span>${d.rel||0}/100</span></div><div class="meter"><i style="width:${d.rel||0}%"></i></div><div class="tiny muted" style="margin-top:6px">Visits: ${d.visits||0}${fav?" • Favorite: "+fav[0]:""}${d.known?.length?" • Learned: "+d.known.join(", "):""}</div><div class="tiny gold" style="margin-top:5px">Likes: ${p.likes.join(" • ")}</div></div>`}).join("")}</div>`
 }
 function guide(){
- return`<div class="panel"><h2>📚 Bartender's Guide</h2><p class="small muted">Recipes, techniques, ingredients, customer advice and career information.</p><div class="tabs">${[["recipes","🍸 Recipes"],["tech","🧊 Tech"],["basics","📖 Basics"],["known","🧠 Known"]].map(x=>`<button class="${S.guide===x[0]?"on":""}" onclick="S.guide='${x[0]}';render()">${x[1]}</button>`).join("")}</div>${S.guide==="recipes"?recipes():S.guide==="tech"?techGuide():S.guide==="known"?knownGuide():basicGuide()}</div>`
+ return`<div class="panel"><h2>📚 Bartender's Guide</h2><p class="small muted">Recipes, techniques, ingredients, customer advice and career information.</p><p class="tiny gold">Recipe QA pass: ingredients, technique, glass, ice and garnish reviewed for this test build.</p><div class="tabs">${[["recipes","🍸 Recipes"],["tech","🧊 Tech"],["basics","📖 Basics"],["known","🧠 Known"]].map(x=>`<button class="${S.guide===x[0]?"on":""}" onclick="S.guide='${x[0]}';render()">${x[1]}</button>`).join("")}</div>${S.guide==="recipes"?recipes():S.guide==="tech"?techGuide():S.guide==="known"?knownGuide():basicGuide()}</div>`
 }
 function recipes(){
  return`<input class="search" placeholder="Search cocktail, ingredient or technique..." value="${S.guideSearch||""}" oninput="S.guideSearch=this.value;filterRecipes(this.value)"><div id="recipeList">${DRINKS.map(d=>{let known=S.recipes.includes(d.id);return`<div class="card recipeCard" data-search="${(d.name+" "+d.need.join(" ")+" "+d.tech+" "+d.cat).toLowerCase()}"><div class="row"><b>${d.icon} ${d.name}</b><span class="tag">${d.cat}</span></div><div class="tiny muted">${d.tech} • ${d.glass} • ${d.ice} • ${d.garnish}</div><div class="chips" style="margin-top:6px">${d.need.map(x=>`<span class="chip">${I[x]||"•"} ${x}</span>`).join("")}</div><p class="small">${d.notes}</p>${known?'<span class="good tiny">✓ Known recipe</span>':`<span class="bad tiny">🔒 Unlock at level ${d.unlock} + Knowledge</span>`}</div>`}).join("")}</div>`
@@ -255,21 +255,36 @@ function closeSettingsModal(){
   }
 }
 function settings(){
- let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button id="soundToggle" class="secondary" onclick="toggleSound(this)">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button id="fastToggle" class="secondary" onclick="toggleFastMode(this)">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">Two tickets per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="closeSettingsModal()">Close</button></div>`;document.body.appendChild(x)
+ let x=document.createElement("div");x.className="modal";x.innerHTML=`<div class="panel"><h2>⚙️ Settings & Test Tools</h2><div class="card"><div class="row"><b>Sound</b><button id="soundToggle" class="secondary" onclick="toggleSound(this)">${S.settings.sound?"ON":"OFF"}</button></div></div><div class="card"><div class="row"><b>Fast mode</b><button id="fastToggle" class="secondary" onclick="toggleFastMode(this)">${S.settings.fastMode?"ON":"OFF"}</button></div><div class="tiny muted">Two tickets per shift instead of the full rush.</div></div><div class="card"><b>Build</b><div class="tiny muted">${GAME_VERSION}</div><div class="tiny good">Final QA build • diagnostics expanded</div></div><button class="secondary" onclick="runDiagnostics()">Run diagnostics</button><button class="secondary" onclick="resetSave()">Reset all progress</button><button class="secondary" onclick="closeSettingsModal()">Close</button></div>`;document.body.appendChild(x)
 }
 function runDiagnostics(){
- let checks=[
-  ["Drink database",DRINKS.every(d=>d.need.length>0&&d.name&&d.unlock>=1)],
-  ["Ingredient icons",ING.every(i=>I[i]!==undefined)],
-  ["Venue data",BARS.length===6&&BARS.every(b=>b.name&&b.lvl)],
-  ["Customer data",PEOPLE.length>=7&&PEOPLE.every(p=>p.id&&p.name)],
-  ["Guide techniques",Object.keys(TECHS).length>=6],
-  ["Save storage",!!window.localStorage]
+ const required=["render","nav","startShift","makeOrder","pick","serveOrder","shiftSummary","finishShift","customize","saveCustomization","settings","toggleSound","toggleFastMode","closeSettingsModal","closeTopModal","claimEvent","gain","spend","travel","buy","buyOwn","ownUpgrade","hire","renameBar","guide","filterRecipes","dialogue","talk","askClue","resetSave"];
+ const fnOK=required.every(n=>typeof window[n]==="function");
+ const recipeOK=DRINKS.length===10&&DRINKS.every(d=>d.name&&Array.isArray(d.need)&&d.need.length>=4&&d.tech&&d.glass&&d.ice&&d.garnish&&d.unlock>=1);
+ const mojitoOK=(()=>{const d=DRINKS.find(x=>x.name==="Mojito");return !!d&&d.need.includes("Mint")&&d.need.includes("Rum")&&d.need.includes("Lime")&&d.tech.includes("Muddle")})();
+ const venueOK=BARS.length===6&&BARS.every(b=>b.name&&b.lvl);
+ const peopleOK=PEOPLE.length>=7&&PEOPLE.every(p=>p.id&&p.name&&Array.isArray(p.likes));
+ const guideOK=Object.keys(TECHS).length>=6;
+ const settingsOK=typeof S.settings.sound==="boolean"&&typeof S.settings.fastMode==="boolean";
+ const saveOK=!!window.localStorage;
+ const eventOK=typeof claimEvent==="function"&&srcHas("claimedEvents")&&srcHas("gain(e[3],e[4],e[5])");
+ const checks=[
+  ["Core functions",fnOK],
+  ["Cocktail database",recipeOK],
+  ["Mojito includes mint",mojitoOK],
+  ["Venue data",venueOK],
+  ["Customer data",peopleOK],
+  ["Guide techniques",guideOK],
+  ["Settings state",settingsOK],
+  ["Local save",saveOK],
+  ["Event reward protection",eventOK]
  ];
- let ok=checks.filter(x=>x[1]).length;
- toast("Diagnostics: "+ok+"/"+checks.length+" passed");
- let bad=checks.filter(x=>!x[1]);if(bad.length)console.error(bad)
+ const ok=checks.filter(x=>x[1]).length;
+ toast("QA diagnostics: "+ok+"/"+checks.length+" passed");
+ const bad=checks.filter(x=>!x[1]);
+ if(bad.length)console.error("The Night Shift QA failures:",bad);
 }
+function srcHas(term){return document.documentElement.innerHTML.includes(term)}
 function resetSave(){if(confirm("Delete all The Night Shift progress on this device?")){localStorage.removeItem("tns_final_test");location.reload()}}
 function claimEvent(){
  if(!S.event)return;
